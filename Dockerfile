@@ -22,5 +22,5 @@ RUN dotnet publish "./CartAPI.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "CartAPI.dll", "--migrate"]
+ENTRYPOINT ["sh", "-c", "dotnet CartAPI.dll --migrate"]
 
