@@ -1,0 +1,45 @@
+version: '3.9'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    environment:
+      SA_PASSWORD: "DeckProject123!"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+    networks:
+      - app-network
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "DeckProject123!" -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+
+  webapi:
+    build: .
+    container_name: cartapi
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=DbDeck2;User Id=sa;Password=DeckProject123!;TrustServerCertificate=True;
+      - JwtConfig__Secret=MySuperLongSecureJwtSecretKey_1234567890!
+      - JwtConfig__Issuer=DeckApi
+      - JwtConfig__Audience=DeckApiUsers
+    ports:
+      - "5000:8080"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+volumes:
+  sql_data:
+
+networks:
+  app-network:
